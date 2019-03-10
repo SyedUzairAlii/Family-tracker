@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "HackatonFinal",
+    "name": "Family Tracker",
     "slug": "HackatonFinal",
     "privacy": "public",
     "sdkVersion": "32.0.0",
@@ -10,11 +10,11 @@
     ],
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logoo.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/splashes.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#F2F2F2"
     },
     "updates": {
       "fallbackToCacheTimeout": 0

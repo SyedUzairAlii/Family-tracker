@@ -129,8 +129,7 @@ class LogIn extends React.Component {
                         justifyContent: 'space-around',
 
                     }}
-                    leftComponent={{ icon: 'menu', color: '#fff', onPress: () => this.map() }}
-                    centerComponent={{ text: "Home Solution", style: { color: '#fff', fontSize: 20 } }}
+                    centerComponent={{ text: "Family Tracker", style: { color: '#fff', fontSize: 20 } }}
 
                 />
                 {/* <View style={styles.statusBar} /> */}
@@ -140,17 +139,17 @@ class LogIn extends React.Component {
 
 
 
-                    <TouchableOpacity onPress={() => this.logInFB()}>
-                        <View style={{ width: 300, margin: 20 }}>
+                    {/* <TouchableOpacity onPress={() => this.logInFB()}> */}
+                        {/* <View style={{ width: 300, margin: 20 }}>
 
                             <SocialIcon
                                 title='Sign In With Facebook'
                                 button
                                 type='facebook'
                             />
-                        </View>
+                        </View> */}
                         {/* <Text style={styles.ButtonText} >Facebook LogIn</Text> */}
-                    </TouchableOpacity>
+                    {/* </TouchableOpacity> */}
                     <TouchableOpacity onPress={() => this._loginWithGoogle()}>
                         <View style={{ width: 300, margin: 20 }}>
 

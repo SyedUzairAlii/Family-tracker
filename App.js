@@ -4,7 +4,7 @@ import Navigation from './Navigation';
 import { Provider } from 'react-redux';
 import store from './src/Store/store';
 import { Constants } from 'expo';
-// console.disableYellowBox = true;
+console.disableYellowBox = true;
 
 export default class App extends React.Component {
 

@@ -27,11 +27,29 @@ export function current_User(currentUser) {
 
         db.collection('UserData').onSnapshot((querySnapshot) => {
             querySnapshot.docChanges().forEach((docs) => {
-                if(docs.type === 'added') {
+                if (docs.type === 'added') {
                     // if(docs.doc.data().UID !== UID){
-                        arr.push(docs.doc.data())
-                        dispatch({ type: actionTypes.ALLUSER, payload: arr })
+                    var obj = {
+                        key: docs.doc.id,
+                        data: docs.doc.data()
+                    }
+                    arr.push(obj)
+                    dispatch({ type: actionTypes.ALLUSER, payload: arr })
                     // }
+                }
+                if (docs.type === 'modified') {
+                    flag = flag ? null : 'flag'
+                    var obj = {
+                        key: docs.doc.id,
+                        data: docs.doc.data()
+                    }
+                    arr.map((item, index) => {
+                        if (item.key === docs.doc.id) {
+                            arr.splice(index, 1, obj)
+                        }
+                    })
+                    dispatch({ type: actionTypes.ALLUSER, payload: arr })
+                    dispatch({ type: actionTypes.FLAG, payload: flag })
                 }
             })
             // console.log(arr,'alluser')
@@ -53,62 +71,64 @@ export function current_User(currentUser) {
 
 
         var circlesArr = []
-            db.collection("circles")
-                .onSnapshot(function (querySnapshot) {
-                    querySnapshot.docChanges().forEach(function (doc) {
-                        if (doc.type === 'added') {
-                            flag = flag ? null : 'flag'
-                            var obj = {
-                                key: doc.doc.id,
-                                data: doc.doc.data()
-                            }
-                            // console.log('object*****', obj)
-                            circlesArr.push(obj)
-                            dispatch({ type: actionTypes.CIRCLES, payload: circlesArr })
-                            dispatch({ type: actionTypes.FLAG, payload: flag })
-                            // console.log('circlesArr************', circlesArr)
+        db.collection("circles")
+            .onSnapshot(function (querySnapshot) {
+                querySnapshot.docChanges().forEach(function (doc) {
+                    if (doc.type === 'added') {
+                        flag = flag ? null : 'flag'
+                        var obj = {
+                            key: doc.doc.id,
+                            data: doc.doc.data()
                         }
-                        if (doc.type === 'modified') {
-                            flag = flag ? null : 'flag'
-                            var obj = {
-                                key: doc.doc.id,
-                                data: doc.doc.data()
-                            }
-                            circlesArr.map((item, index) => {
-                                if (item.key === doc.doc.id) {
-                                    circlesArr.splice(index, 1, obj)
-                                }
-                            })
-                            dispatch({ type: actionTypes.CIRCLES, payload: circlesArr })
-                            dispatch({ type: actionTypes.FLAG, payload: flag })
-                            // console.log('Addedreciever', arr)
+                        // console.log('object*****', obj)
+                        circlesArr.push(obj)
+                        dispatch({ type: actionTypes.CIRCLES, payload: circlesArr })
+                        dispatch({ type: actionTypes.FLAG, payload: flag })
+                        // console.log('circlesArr************', circlesArr)
+                    }
+                    if (doc.type === 'modified') {
+                        flag = flag ? null : 'flag'
+                        var obj = {
+                            key: doc.doc.id,
+                            data: doc.doc.data()
                         }
-                    })
+                        circlesArr.map((item, index) => {
+                            if (item.key === doc.doc.id) {
+                                circlesArr.splice(index, 1, obj)
+                            }
+                        })
+                        dispatch({ type: actionTypes.CIRCLES, payload: circlesArr })
+                        dispatch({ type: actionTypes.FLAG, payload: flag })
+                        // console.log('Addedreciever', arr)
+                    }
                 })
-            
-        }
-               
-            
-    
-        
-        
+            })
+
     }
 
-    export function login(userData) {
-        return dispatch => {
-           
-            console.log(userData,'userdata')
-           
-            db.collection('UserData').doc(userData.UID).set(userData)
-            
-        }}
 
-        export function CreatCircle(circle) {
-            return dispatch => {
-                db.collection('circles').add(circle)
-            }}
-    
-    
+
+
+
+}
+
+export function login(userData) {
+    return dispatch => {
+
+        console.log(userData, 'userdata')
+
+        db.collection('UserData').doc(userData.UID).set(userData)
+
+    }
+}
+
+export function CreatCircle(circle) {
+    return dispatch => {
+        db.collection('circles').add(circle)
+    }
+}
+
+
 
 // export function Log_Out() {
 //     return dispatch => {
@@ -148,10 +168,14 @@ export function enterCircleCode(uid, code) {
                         querySnapshot.forEach((doc) => {
                             console.log(`${doc.id} => ${doc.data().circleName}`);
                             if (doc.data().members.indexOf(uid) === -1) {
-                                db.collection('circles').doc(doc.id).update({ members: [...doc.data().members, uid] })
-                                    .then(() => {
-                                        resolve()
-                                    })
+                                if (doc.data().userUid === uid) {
+                                    alert('you are Circle Admin!')
+                                } else {
+                                    db.collection('circles').doc(doc.id).update({ members: [...doc.data().members, uid] })
+                                        .then(() => {
+                                            resolve()
+                                        })
+                                }
                             }
                             else {
                                 reject()
@@ -165,7 +189,7 @@ export function enterCircleCode(uid, code) {
         })
     }
 }
-        
+
 // export function Updte(uid) {
 //     return dispatch => {
 //         const UID =uid
@@ -187,16 +211,16 @@ export function enterCircleCode(uid, code) {
 //                 }
 //                 console.log("alluser dashboar", arr)
 //         })
-      
-        
+
+
 //         }
-    
+
 // }             
 
 export function addEmail(obj, email) {
     return dispatch => {
         return new Promise(function (resolve, reject) {
-            console.log(obj, email,'jjjkj')
+            console.log(obj, email, 'jjjkj')
             db.collection('UserData').where('email', '==', email).get().then((querySnapshot) => {
                 querySnapshot.forEach((docs) => {
 
@@ -214,11 +238,44 @@ export function addEmail(obj, email) {
                                 body: obj.joinCode,
                             })
                         });
-                        console.log(docs.data().expoToken,'lll')
+                        console.log(docs.data().expoToken, 'lll')
                     }
                     db.collection('UserData').doc(docs.id).update({})
                 })
             })
+        })
+    }
+}
+
+//leaveCircle
+export function leaveCircle(uid, code) {
+    return function (dispatch) {
+        return new Promise(function (resolve, reject) {
+            console.log('Object***', uid, code)
+            db.collection("circles").where('joinCode', '==', code).get()
+                .then((querySnapshot) => {
+                    if (!querySnapshot.empty) {
+                        querySnapshot.forEach((doc) => {
+                            console.log(`${doc.id} => ${doc.data().circleName}`);
+                            if (doc.data().members.indexOf(uid) !== -1) {
+                                var index = doc.data().members.indexOf(uid)
+                                console.log('Index', index)
+                                var arr = doc.data().members.slice(0)
+                                var membersArr = arr.splice(index, 1)
+                                console.log('Hello Worrld', arr)
+                                db.collection('circles').doc(doc.id).update({ members: arr })
+                                    .then(() => {
+                                        resolve()
+                                    })
+                            }
+                            else {
+                                reject()
+                            }
+                        });
+                    }
+                })
+                .catch(() => {
+                })
         })
     }
 }

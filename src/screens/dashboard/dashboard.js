@@ -1,15 +1,21 @@
 import React from 'react';
-import { View, ScrollView, Image, Text, TextInput, StyleSheet, Button, TouchableOpacity, ActivityIndicator, RefreshControl, Dimensions } from 'react-native';
+import { View, ScrollView, Image, Text, Linking, StyleSheet, Button, 
+TouchableOpacity, ActivityIndicator, Platform, Dimensions,AppState } from 'react-native';
 import firebase from '../../config/Firebase';
 import { StackActions, NavigationActions } from 'react-navigation';
 import { connect } from 'react-redux'
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import { Input, Header, Divider } from 'react-native-elements';
-import { Constants, Location, Permissions, Contacts, Notifications } from 'expo';
-import { LinearGradient } from 'expo';
+import { Constants, Location, Permissions,
+ Contacts, Notifications, IntentLauncherAndroid } from 'expo';
+// import { LinearGradient } from 'expo';
 import { User_Messages } from '../../Store/actions/authAction'
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { GetCircles } from '../../Store/actions/authAction'
+// import { GetCircles } from '../../Store/actions/authAction'
+import moment from 'moment'
+import Modal from 'react-native-modal'
+
+
 
 const { width, height } = Dimensions.get('window');
 const ASPECT_RATIO = width / height;
@@ -27,6 +33,8 @@ class Home extends React.Component {
             userLocation: { lat: null, lng: null },
             get: false,
             sellerLocation: false,
+            isLocationModalVisible: false,
+            appState: AppState.currentState
 
         };
     }
@@ -34,9 +42,11 @@ class Home extends React.Component {
 
     componentDidMount() {
         const { usersAll, me, Circles, flag } = this.props;
-        // if (me) {
-
-        // }
+        if (me) {
+            this.setState({
+                currentUser: me
+            })
+        }
         // console.log('alalalalal', usersAll)
         if (!Constants.isDevice) {
             this.setState({
@@ -45,23 +55,25 @@ class Home extends React.Component {
         } else {
             this._getLocationAsync();
         }
-
-
+        this.locatioUpdate()
         getToken();
         this.listener = Notifications.addListener(this.handleNotification);
-
-
     }
+
+
+
     handleNotification = ({ origin, data }) => {
         console.log(
             `Push notification ${origin} with data: ${(data)}`,
         );
     };
+    //menu 
 
     menu = () => {
         this.props.navigation.navigate('EnterCode')
 
     }
+    // crat circle
     add = () => {
         const resetAction = StackActions.reset({
             index: 0,
@@ -72,29 +84,77 @@ class Home extends React.Component {
         this.props.navigation.dispatch(resetAction)
 
     }
+    //location live 
 
-    CircleSetting = (item) => {
-
-        this.props.navigation.navigate('CircleDetail', { item })
-
+    locatioUpdate = () => {
+        setTimeout(() => {
+            console.log('location updated')
+            this._getLocationAsync()
+        }, 10000)
     }
 
+
+    //go in circle detail page
+    CircleSetting = (item) => {
+        this.props.navigation.navigate('CircleDetail', { item })
+    }
+    // check your frend current location time
+
+    currentUser = (item) => {
+
+        var time = moment(item.date).startOf('hour').fromNow();
+        this.setState({
+            CheckStatus: true,
+            lastsceen: time,
+            city: item.city,
+            country: item.country,
+            address: item.address,
+            currentUserPic: item.photo,
+            currentUserName: item.name
+        })
+
+        console.log(time, 'current user')
+    }
+
+    //select the circle to view
+
     CircleIn = (users) => {
-        // console.log(user,'item')
-        // console.log('kjhkjh', users);
+        const { allUser, admin } = this.state
         const { usersAll } = this.props
         var ArrLoaction = []
-        if (usersAll && users.length) {
+        var circleAdmin
+        var panic = []
+        this.setState({
+            membrs: false,
+            admin: false,
+            panicAlarm: false
+        })
+        if (allUser && allUser.length) {
             // console.log('add===', alluser);
-            usersAll.map(item => {
-                if (!(users.indexOf(item.UID))) {
+            allUser.map(item => {
+
+                if (!(users.members.indexOf(item.data.UID) === -1)) {
                     console.log(item, 'yahoooo');
-                    ArrLoaction.push(item)
+                    var obj = item.data
+                    ArrLoaction.push(obj)
+                    panic.push(obj)
+                } else if (users.userUid === item.data.UID) {
+                    circleAdmin = item.data
+                    panic.push(item.data)
+
+
                 }
             })
             if (ArrLoaction.length) {
-                this.setState({ membrs: ArrLoaction })
-                console.log(ArrLoaction,'check')
+                setTimeout(() => {
+
+                    this.setState({
+                        membrs: ArrLoaction,
+                        admin: circleAdmin,
+                        panicAlarm: panic
+                    })
+                }, 100)
+                console.log(ArrLoaction, 'check')
             }
 
         }
@@ -110,40 +170,76 @@ class Home extends React.Component {
         const { me } = this.props;
 
         console.log(me, "function run ")
-        let { status } = await Permissions.askAsync(Permissions.LOCATION);
-        if (status !== 'granted') {
-            this.setState({
-                errorMessage: 'Permission to access location was denied'
+        try {
+            let { status } = await Permissions.askAsync(Permissions.LOCATION);
+            let location = await Location.getCurrentPositionAsync({});
+            let address = Promise.resolve(Expo.Location.reverseGeocodeAsync(location.coords));
+            const that = this
+            address.then(function (value) {
+                // console.log(value)
+                // console.log(address)
+                let array = value.map(name => {
+                    var obj = {
+                        country: name.country,
+                        city: name.city,
+                        address: name.name,
+                        region: name.region
 
+                    }
+                    db.collection('UserData').doc(me.UID).update(obj)
+                })
             });
-            console.log("permission not granted ")
-
+            if (status !== 'granted') {
+                this.setState({
+                    errorMessage: 'Permission to access location was denied'
+                });
+                console.log("permission not granted ")
+            }
+            console.log("permission  granted ")
+            const obj = {
+                direction: { lat: location.coords.latitude, lng: location.coords.longitude },
+                date: Date.now(),
+            }
+            this.setState({
+                currentLocation: { lat: location.coords.latitude, lng: location.coords.longitude },
+                get: true,
+            })
+            console.log("location===>>>>", obj)
+            db.collection('UserData').doc(me.UID).update(obj)
+        } catch (error) {
+            let statuss = Location.getProviderStatusAsync()
+            if (!statuss.LocationServicesEnabled) {
+                this.setState({ isLocationModalVisible: true })
+            }
         }
-
-        let location = await Location.getCurrentPositionAsync({});
-        console.log("permission  granted ")
-
-        // this.setState({
-        //     location,
-        //     where: { lat: location.coords.latitude, lng: location.coords.longitude },
-        //     get: true
-        // });
-        const obj = {
-            direction: { lat: location.coords.latitude, lng: location.coords.longitude }
-        }
-        this.setState({
-            currentLocation: { lat: location.coords.latitude, lng: location.coords.longitude },
-            get: true,
-        })
-        console.log("location===>>>>", obj)
-        db.collection('UserData').doc(me.UID).update(obj)
 
     };
+    openSetting = () => {
+        if (Platform.OS === 'ios') {
+            Linking.openURL('app-settings:')
+        }else{
+            IntentLauncherAndroid.startActivityAsync(
+                IntentLauncherAndroid.ACTION_LOCATION_SOURCE_SETTINGS
+            )
+        }
+        this.setState({
+            openSetting:false
+        })
+    }
+    _handleAppStateChange = (nextAppState) => {
+        if (this.state.appState.match(/inactive|background/) && nextAppState === 'active') {
+          console.log('App has come to the foreground!')
+          this._getLocationAsync();
+        }
+        this.setState({appState: nextAppState});
+      }
+
     componentWillMount() {
         const { Circles, me, usersAll } = this.props
         // console.log(usersAll, 'all users will mount')
 
         const currentUserUID = me.UID
+        AppState.addEventListener('change', this._handleAppStateChange);
         var count = 0
         var arr = [];
         if (Circles && Circles.length) {
@@ -164,9 +260,25 @@ class Home extends React.Component {
             })
         }
     }
+
+    componentWillUnmount() {
+        AppState.removeEventListener('change', this._handleAppStateChange);
+      }
+      
     componentWillReceiveProps(props) {
         const { Circles, me, usersAll } = props
-        // console.log(usersAll, 'all users will receviced')
+        console.log(usersAll, 'all users will receviced')
+        if (usersAll && usersAll.length) {
+            this.setState({
+                allUser: usersAll
+            })
+        }
+        if (me) {
+            this.setState({
+                currentUser: me
+            })
+        }
+
         const currentUserUID = me.UID
         var count = 0
         var arr = [];
@@ -188,20 +300,19 @@ class Home extends React.Component {
             })
         }
 
-        // if (!Constants.isDevice) {
-        //     this.setState({
-        //         errorMessage: 'Oops, this will not work on Sketch in an Android emulator. Try it on your device!',
-        //     });
-        // } else {
-        //     this._getLocationAsync();
-        // }
+
 
     }
 
     static navigationOptions = { header: null }
 
     render() {
-        const { membrs, circleNum, circles, currentLocation, get, circle, userLocation, sellerLocation } = this.state
+        const { membrs, circleNum, circles, currentLocation, CheckStatus, get, circle, userLocation, admin, currentUser, lastsceen,
+            city,
+            country,
+            address,
+            currentUserPic, currentUserName, openSetting } = this.state
+
         const coordinates = [
             {
                 latitude: currentLocation.lat,
@@ -214,6 +325,18 @@ class Home extends React.Component {
         ]
         return (
             <View style={{ flex: 1 }}>
+                <Modal
+                    onModalHide={openSetting ? this.openSetting : undefined}
+                    isVisible={this.state.isLocationModalVisible}>
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+
+                        <Button title='Enabel Location Services' onPress={() => this.setState({
+                            isLocationModalVisible: false, openSetting: true
+                        })}>
+
+                        </Button>
+                    </View>
+                </Modal>
 
                 <Header
                     containerStyle={{
@@ -225,6 +348,7 @@ class Home extends React.Component {
                     centerComponent={{ text: circleNum ? `Circles (${circleNum})` : null, style: { color: '#fff', fontSize: 20 }, onPress: () => this.setState({ circle: circle ? false : true }) }}
                     rightComponent={{ icon: 'group-add', color: 'white', onPress: () => this.add() }}
                 />
+
                 {circle &&
                     <View style={{ minHeight: 40, maxHeight: 160 }}>
                         <ScrollView>
@@ -234,16 +358,15 @@ class Home extends React.Component {
                                         <View style={styles.view}>
                                             <View>
                                                 <Text>
-                                                    <Icon name='group' size={30} color='#30e836' />
+                                                    <Icon name='users' size={30} color='#30e836' />
                                                 </Text>
                                             </View>
                                             <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                                <Text style={{ fontSize: 16, fontWeight: "700", paddingLeft: 15 }} onPress={() => this.CircleIn(users = item.members)}>{item.circleName}</Text>
+                                                <Text style={{ fontSize: 16, fontWeight: "700", paddingLeft: 15 }} onPress={() => this.CircleIn(users = item)}>{item.circleName}</Text>
                                                 <Text style={{ paddingRight: 8 }} onPress={() => this.CircleSetting(item)}><Icon name='cog' size={30} color='gray' /></Text>
                                             </View>
                                         </View>)
                                 })
-
                             }
 
                         </ScrollView>
@@ -262,48 +385,56 @@ class Home extends React.Component {
                                 latitudeDelta: LATITUDE_DELTA,
                                 longitudeDelta: LONGITUDE_DELTA,
                             }}
+
                         >
                             {
-                               membrs && membrs.map((item)=>{
-                                   return(
-                                    <MapView.Marker
+                                membrs && membrs.map((item) => {
+                                    return (
+                                        <MapView.Marker
+                                            coordinate={{
+                                                latitude: item.direction.lat,
+                                                longitude: item.direction.lng,
+                                            }}
+                                            onPress={() => this.currentUser(item)}
+
+                                        >
+                                            <Image
+                                                source={{ uri: item.photo }}
+                                                style={{ width: 50, height: 50, borderRadius: 50 }}
+                                            />
+                                        </MapView.Marker>
+                                    )
+                                })
+
+
+                            }
+                            {admin ?
+                                <MapView.Marker
                                     coordinate={{
-                                        latitude: item.direction.lat,
-                                        longitude: item.direction.lng,
+                                        latitude: admin.direction.lat,
+                                        longitude: admin.direction.lng,
                                     }}
+                                    onPress={() => this.currentUser(admin)}
+
                                 >
                                     <Image
-                                        source={{ uri: item.photo}}
+                                        source={{ uri: admin.photo }}
                                         style={{ width: 50, height: 50, borderRadius: 50 }}
                                     />
                                 </MapView.Marker>
-                                   )
-                               })
-
-                              
+                                :
+                                <MapView.Marker
+                                    coordinate={{
+                                        latitude: currentLocation.lat,
+                                        longitude: currentLocation.lng,
+                                    }}
+                                >
+                                    <Image
+                                        source={{ uri: currentUser.photo }}
+                                        style={{ width: 50, height: 50, borderRadius: 50 }}
+                                    />
+                                </MapView.Marker>
                             }
-                            <MapView.Marker
-                                coordinate={{
-                                    latitude: currentLocation.lat,
-                                    longitude: currentLocation.lng,
-                                }}
-                            >
-                                <Image
-                                    source={{ uri: 'http://www.wan-ifra.org/sites/default/files/imagecache/default_col_4/field_article_image/20141112-181853-0e1d152e.jpg' }}
-                                    style={{ width: 50, height: 50, borderRadius: 50 }}
-                                />
-                            </MapView.Marker>
-
-
-
-                            {/* <MapViewDirections
-                            origin={coordinates[0]}
-                            destination={coordinates[coordinates.length - 1]}
-                            apikey={GOOGLE_MAPS_APIKEY}
-                            strokeWidth={3}
-                            strokeColor="hotpink"
-                        />  */}
-
                         </MapView >
                         :
                         <View style={styles.container}>
@@ -311,7 +442,38 @@ class Home extends React.Component {
                         </View>
                     }
                 </View>
+                {
+                    CheckStatus &&
+                    <View style={{ minHeight: 40, maxHeight: 160 }} >
+                        {/* <View style={{alignSelf:'flex-end',paddingRight:20,height:25,backgroundColor:'#F2F2F2'}}>
+                    </View> */}
+                        <View style={styles.view}>
+                            <View>
+                                <Image
+                                    source={{ uri: currentUserPic }}
+                                    style={{ width: 50, height: 60, borderRadius: 50 }}
+                                />
 
+                            </View>
+                            <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'space-between' }}>
+                                <Text style={{ fontSize: 16, fontWeight: "700", paddingLeft: 15 }} >{currentUserName}</Text>
+                                <Text style={{ fontSize: 16, fontWeight: "700", paddingLeft: 15 }} >{address + ', ' + city + ',' + country}</Text>
+                                <Text style={{ paddingLeft: 15 }} >{'Last tracked ' + lastsceen}</Text>
+                            </View>
+                            <View style={{ paddingRight: 10 }}>
+                                <Icon
+                                    raised
+                                    name='angle-double-down'
+                                    type='font-awesome'
+                                    color='#f50'
+                                    size={26}
+                                    onPress={() => this.setState({
+                                        CheckStatus: false
+                                    })} />
+                            </View>
+                        </View>
+                    </View>
+                }
 
             </View>
         );
@@ -371,7 +533,7 @@ const styles = StyleSheet.create({
         // marginLeft: 5,
         flexDirection: 'row',
         justifyContent: 'flex-start',
-        // backgroundColor: '#eff1f2',
+        backgroundColor: '#F2F2F2',
         borderWidth: 1,
         borderColor: 'white'
     }

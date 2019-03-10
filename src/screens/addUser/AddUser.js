@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, ScrollView, Text, TextInput, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView } from 'react-native';
+import { View, ScrollView, Text, Alert, StyleSheet,  Image, KeyboardAvoidingView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Input, Button } from 'react-native-elements';
-import { ImagePicker, Location, Permissions, } from 'expo'
+import { Header, Avatar } from 'react-native-elements';
+import { ImagePicker, Location, Permissions, MailComposer } from 'expo'
 import { connect } from 'react-redux'
 import firebase from 'firebase'
-import {addEmail} from '../../Store/actions/authAction'
+import { addEmail } from '../../Store/actions/authAction'
 class Request extends React.Component {
     constructor() {
         super()
@@ -14,29 +15,30 @@ class Request extends React.Component {
             Name: '',
             image: '',
             currentUID: '',
-             email:''
+            email: ''
 
         }
     }
 
     componentDidMount() {
-        const { CurrentUser, UID,navigation,alluser } = this.props
-        if(alluser){
-            console.log(alluser,'alluser in add user ')
+        const { me, UID, navigation, alluser } = this.props
+        if (alluser) {
+            console.log(alluser, 'alluser in add user ')
             this.setState({
-                allUserEmail:alluser
+                allUserEmail: alluser
             })
         }
         const Circledata = navigation.getParam('item')
-        if(Circledata){
+        if (Circledata) {
             this.setState({
-                data:Circledata,
-                CircleCode:Circledata.joinCode
+                data: Circledata,
+                CircleCode: Circledata.joinCode,
+                circleName:Circledata.circleName
             })
         }
-        if (CurrentUser) {
+        if (me) {
             this.setState({
-                Name: CurrentUser.Name,
+                Name: me.name,
                 currentUID: UID
             })
         }
@@ -44,19 +46,64 @@ class Request extends React.Component {
 
 
     submit() {
-        const { data,email } = this.state
+        const { data, email } = this.state
+        const{Name}= this.state
+        var code = data.joinCode
+        if (data && email) {
+            this.setState({email:''})
 
-       if(data && email){
-        console.log(data, email,'22322')
+        Alert.alert(
+            'Send Circle Code',
+            'Ask a Friend To Join Your Circle',
+            [
+              {
+                text: 'Send Notification',
+                onPress: () => { this.props.Add(data, email)},
+                style: 'cancel',
+              },
+              {text: 'Send Email', onPress: () => {
 
-this.props.Add(data, email)
-       }
+                var mail = Promise.resolve(MailComposer.composeAsync({
+                    recipients: [email],
+                    body: `Your Friend ${Name} Ask You To Join His Circle.
+                     Your  Circle Code: ${code}`,
+                    subject: `Family Tracker app`,
+        
+                }).then(function (val) {
+                    Alert.alert(
+                        'Sent',
+                        'Sucess',
+                        [
+                            {text: 'Done', }
+                        ]
+                        )
+                })
+
+                )
+               
+              }},
+            ],
+            {cancelable: false},
+          );
+        }
 
     }
+    static navigationOptions = { header: null }
     render() {
-        const { number, CircleCode, email } = this.state
+        const { number, CircleCode, email ,data,circleName} = this.state
 
         return (
+            <View>
+                <Header
+                    containerStyle={{
+                        backgroundColor: '#075e54',
+                        justifyContent: 'space-around',
+                    }}
+                    placement="center"
+                    leftComponent={{ icon: 'arrow-back', color: '#fff', onPress: () =>  this.props.navigation.navigate('CircleDetail', { data }) }}
+                    centerComponent={{ text: circleName ? circleName : null, style: { color: '#fff', fontSize: 18, fontWeight: 'bold' } }}
+                    // rightComponent={{ icon: 'cloud-circle', color: '#f50', onPress: () => this.Panic() }}
+                />
             <ScrollView>
                 <KeyboardAvoidingView behavior="position" enabled>
                     <View style={styles.container}>
@@ -64,14 +111,14 @@ this.props.Add(data, email)
                             <Image style={styles.icon} source={require("../../../assets/imag.jpg")} />
 
                         </View>
-                        <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20, marginTop: 20 }}>{'Code# '+CircleCode}</Text>
+                        <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20, marginTop: 20 }}>{'Code# ' + CircleCode}</Text>
 
                         <View >
                             <View style={{ padding: 10 }}>
 
                                 <Text style={{ color: 'black', fontSize: 20 }}>Enter Email Send Code:</Text>
                             </View>
-                            <View style={{ padding: 10 }}>
+                            <View style={{ padding: 5 }}>
 
                                 <Input
                                     placeholder='     Enter Email'
@@ -80,7 +127,7 @@ this.props.Add(data, email)
                             </View>
 
                         </View>
-                      
+
                         <View style={{ marginTop: 42 }}>
                             <Button
                                 onPress={() => this.submit()}
@@ -103,6 +150,7 @@ this.props.Add(data, email)
                     </View>
                 </KeyboardAvoidingView>
             </ScrollView>
+            </View>
         );
     }
 }
@@ -118,14 +166,14 @@ const styles = StyleSheet.create({
         width: 200,
         // borderRadius: 100,
         paddingLeft: 20,
-        opacity:0.8
+        opacity: 0.8
     },
 });
 
 function mapStateToProps(states) {
     return ({
         UID: states.authReducers.UID,
-        CurrentUser: states.authReducers.USER,
+        me: states.authReducers.USER,
         alluser: states.authReducers.ALLUSER,
 
     })
