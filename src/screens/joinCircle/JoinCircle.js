@@ -46,7 +46,7 @@ class EnterCode extends React.Component {
             <View style={{ flex: 1 }}>
                 <Header
                  containerStyle={{
-                    backgroundColor: '#075e54',
+                    backgroundColor: '#0D47A1',
                     justifyContent: 'space-around',
                 }}
                     placement="center"

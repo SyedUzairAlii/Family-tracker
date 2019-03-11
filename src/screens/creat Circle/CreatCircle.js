@@ -72,17 +72,17 @@ class AddCircle extends React.Component {
         return (
             <ScrollView>
                 <KeyboardAvoidingView behavior="position" enabled>
-                    <View style={styles.statusBar} />
+                    {/* <View style={styles.statusBar} /> */}
                     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
 
                         <Header
                             containerStyle={{
-                                backgroundColor: '#ffff',
+                                backgroundColor: '#0D47A1',
                                 justifyContent: 'space-around',
 
                             }}
-                            leftComponent={{ icon: 'arrow-back', onPress: () => this.back() }}
-                            centerComponent={{ text: 'Creat a Circle', style: { color: 'black', fontSize: 20 } }}
+                            leftComponent={{ icon: 'arrow-back',style:{color:'white'}, onPress: () => this.back() }}
+                            centerComponent={{ text: 'Creat a Circle', style: { color: 'white', fontSize: 20 } }}
                         />
 
                         <View >
@@ -103,9 +103,9 @@ class AddCircle extends React.Component {
 
                             <Button
                                 onPress={this.Send}
-                                title="Creat"
+                                title="Create"
                                 type="outline"
-                                color="pink"
+                                color="#FC78BA"
                             />
                         </View>
                     </View>

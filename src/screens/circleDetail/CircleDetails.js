@@ -45,7 +45,7 @@ class CircleDetail extends React.Component {
     CircleIn = () => {
         const { allUser, users } = this.state
         // const { allUser } = this.props
-        // console.log(alluser,  'run')
+        console.log(allUser,  'run')
         var ArrLoaction = []
         var circleAdmin
         var panic = []
@@ -66,7 +66,7 @@ class CircleDetail extends React.Component {
 
                 }
             })
-            if (ArrLoaction.length) {
+            if (ArrLoaction.length || circleAdmin) {
                 setTimeout(() => {
 
                     this.setState({
@@ -74,7 +74,10 @@ class CircleDetail extends React.Component {
                         circleOwner: circleAdmin,
                         panicAlarm: panic
                     })
-                }, 100)
+                }, 10)
+                
+                   
+                
                 // console.log(circleAdmin, 'check')
             }
 
@@ -154,7 +157,7 @@ class CircleDetail extends React.Component {
             <View style={{ flex: 1 }}>
                 <Header
                     containerStyle={{
-                        backgroundColor: '#075e54',
+                        backgroundColor: '#0D47A1',
                         justifyContent: 'space-around',
                     }}
                     placement="center"
@@ -173,7 +176,7 @@ class CircleDetail extends React.Component {
                                     <View>
                                         <Image
                                             source={{ uri: circleOwner.photo }}
-                                            style={{ width: 50, height: 50, borderRadius: 50 }}
+                                            style={{ width: 50, height: 50, borderRadius: 25 }}
                                         />
 
                                     </View>
@@ -194,7 +197,7 @@ class CircleDetail extends React.Component {
                                         <View>
                                             <Image
                                                 source={{ uri: item.photo }}
-                                                style={{ width: 50, height: 50, borderRadius: 50 }}
+                                                style={{ width: 50, height: 50, borderRadius: 25 }}
                                             />
 
                                         </View>

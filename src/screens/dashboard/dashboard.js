@@ -1,20 +1,24 @@
 import React from 'react';
-import { View, ScrollView, Image, Text, Linking, StyleSheet, Button, 
-TouchableOpacity, ActivityIndicator, Platform, Dimensions,AppState } from 'react-native';
+import {
+    View, ScrollView, Image, Text, Linking, StyleSheet, Button,
+    TouchableOpacity, ActivityIndicator, Platform, Dimensions, AppState
+} from 'react-native';
 import firebase from '../../config/Firebase';
 import { StackActions, NavigationActions } from 'react-navigation';
 import { connect } from 'react-redux'
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import { Input, Header, Divider } from 'react-native-elements';
-import { Constants, Location, Permissions,
- Contacts, Notifications, IntentLauncherAndroid } from 'expo';
+import {
+    Constants, Location, Permissions,
+    Contacts, Notifications, IntentLauncherAndroid
+} from 'expo';
 // import { LinearGradient } from 'expo';
 import { User_Messages } from '../../Store/actions/authAction'
 import Icon from 'react-native-vector-icons/FontAwesome';
 // import { GetCircles } from '../../Store/actions/authAction'
 import moment from 'moment'
 import Modal from 'react-native-modal'
-
+import MarkerImage from '../../../assets/markerr.png'
 
 
 const { width, height } = Dimensions.get('window');
@@ -169,8 +173,8 @@ class Home extends React.Component {
     _getLocationAsync = async () => {
         const { me } = this.props;
 
-        console.log(me, "function run ")
         try {
+            console.log(me, "function run ")
             let { status } = await Permissions.askAsync(Permissions.LOCATION);
             let location = await Location.getCurrentPositionAsync({});
             let address = Promise.resolve(Expo.Location.reverseGeocodeAsync(location.coords));
@@ -217,22 +221,22 @@ class Home extends React.Component {
     openSetting = () => {
         if (Platform.OS === 'ios') {
             Linking.openURL('app-settings:')
-        }else{
+        } else {
             IntentLauncherAndroid.startActivityAsync(
                 IntentLauncherAndroid.ACTION_LOCATION_SOURCE_SETTINGS
             )
         }
         this.setState({
-            openSetting:false
+            openSetting: false
         })
     }
     _handleAppStateChange = (nextAppState) => {
         if (this.state.appState.match(/inactive|background/) && nextAppState === 'active') {
-          console.log('App has come to the foreground!')
-          this._getLocationAsync();
+            console.log('App has come to the foreground!')
+            this._getLocationAsync();
         }
-        this.setState({appState: nextAppState});
-      }
+        this.setState({ appState: nextAppState });
+    }
 
     componentWillMount() {
         const { Circles, me, usersAll } = this.props
@@ -263,8 +267,8 @@ class Home extends React.Component {
 
     componentWillUnmount() {
         AppState.removeEventListener('change', this._handleAppStateChange);
-      }
-      
+    }
+
     componentWillReceiveProps(props) {
         const { Circles, me, usersAll } = props
         console.log(usersAll, 'all users will receviced')
@@ -340,7 +344,7 @@ class Home extends React.Component {
 
                 <Header
                     containerStyle={{
-                        backgroundColor: '#075e54',
+                        backgroundColor: '#0D47A1',
                         justifyContent: 'space-around',
                     }}
                     placement="center"
@@ -350,7 +354,7 @@ class Home extends React.Component {
                 />
 
                 {circle &&
-                    <View style={{ minHeight: 40, maxHeight: 160 }}>
+                    <View style={{ minHeight: 40, maxHeight: 180 }}>
                         <ScrollView>
                             {
                                 circles.map((item) => {
@@ -391,6 +395,7 @@ class Home extends React.Component {
                                 membrs && membrs.map((item) => {
                                     return (
                                         <MapView.Marker
+                                            title={item.name}
                                             coordinate={{
                                                 latitude: item.direction.lat,
                                                 longitude: item.direction.lng,
@@ -398,9 +403,31 @@ class Home extends React.Component {
                                             onPress={() => this.currentUser(item)}
 
                                         >
+                                           
+                                                {/* <View style={[styles.marker, { position: 'relative' }]}>
+                                                    <TouchableOpacity onPress={() => console.log('pressed')}>
+                                                        <Image
+                                                            source={MarkerImage}
+                                                        />
+                                                        <View style={{
+                                                            width: 55,
+                                                            height: 56,
+                                                            borderRadius: 50,
+                                                            overflow: 'hidden',
+                                                            position: 'absolute',
+                                                            top: 5,
+                                                            right: 3
+                                                        }}>
+                                                            <Image
+                                                                style={{ width: '100%', height: '100%' }}
+                                                                source={ { uri: item.photo }}
+                                                            />
+                                                        </View>
+                                                    </TouchableOpacity>
+                                                </View> */}
                                             <Image
                                                 source={{ uri: item.photo }}
-                                                style={{ width: 50, height: 50, borderRadius: 50 }}
+                                                style={{ width: 50, height: 50, borderRadius: 25}}
                                             />
                                         </MapView.Marker>
                                     )
@@ -410,6 +437,7 @@ class Home extends React.Component {
                             }
                             {admin ?
                                 <MapView.Marker
+                                    title={admin.name}
                                     coordinate={{
                                         latitude: admin.direction.lat,
                                         longitude: admin.direction.lng,
@@ -417,21 +445,66 @@ class Home extends React.Component {
                                     onPress={() => this.currentUser(admin)}
 
                                 >
+                                {/* <View style={[styles.marker, { position: 'relative' }]}>
+                                                    <TouchableOpacity onPress={() => console.log('pressed')}>
+                                                        <Image
+                                                            source={MarkerImage}
+                                                        style={{width:10,height:10}}
+                                                        />
+                                                        <View style={{
+                                                            width: 55,
+                                                            height: 56,
+                                                            borderRadius: 50,
+                                                            overflow: 'hidden',
+                                                            position: 'absolute',
+                                                            top: 5,
+                                                            right: 3
+                                                        }}>
+                                                            <Image
+                                                                style={{ width: '100%', height: '100%' }}
+                                                                source={ { uri: admin.photo }}
+                                                            />
+                                                        </View>
+                                                    </TouchableOpacity>
+                                                </View> */}
                                     <Image
                                         source={{ uri: admin.photo }}
-                                        style={{ width: 50, height: 50, borderRadius: 50 }}
+                                        style={{ width: 50, height: 50, borderRadius: 25 }}
                                     />
                                 </MapView.Marker>
                                 :
                                 <MapView.Marker
+                                    title={currentUser.name}
                                     coordinate={{
                                         latitude: currentLocation.lat,
                                         longitude: currentLocation.lng,
                                     }}
                                 >
+                                {/* <View style={[styles.marker, { position: 'relative' }]}>
+                                                    <TouchableOpacity onPress={() => console.log('pressed')}>
+                                                        <Image
+                                                            source={MarkerImage}
+                                                            style={{width:100,height:100,}}
+                                                        />
+                                                        <View style={{
+                                                            width: 55,
+                                                            height: 56,
+                                                            borderRadius: 50,
+                                                            overflow: 'hidden',
+                                                            position: 'absolute',
+                                                            top: 5,
+                                                            right: 3
+                                                        }}>
+                                                            <Image
+                                                                style={{ width: '100%', height: '100%' }}
+                                                                source={ { uri: currentUser.photo }}
+                                                            />
+                                                        </View>
+                                                    </TouchableOpacity>
+                                                </View> */}
                                     <Image
                                         source={{ uri: currentUser.photo }}
-                                        style={{ width: 50, height: 50, borderRadius: 50 }}
+                                        style={{ width: 50, height: 50, borderRadius: 25 }}
                                     />
                                 </MapView.Marker>
                             }
@@ -451,7 +524,7 @@ class Home extends React.Component {
                             <View>
                                 <Image
                                     source={{ uri: currentUserPic }}
-                                    style={{ width: 50, height: 60, borderRadius: 50 }}
+                                    style={{ width: 50, height: 60, borderRadius: 25 }}
                                 />
 
                             </View>

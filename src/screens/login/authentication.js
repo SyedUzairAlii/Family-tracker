@@ -125,7 +125,7 @@ class LogIn extends React.Component {
                 <Header
 
                     containerStyle={{
-                        backgroundColor: '#075e54',
+                        backgroundColor: '#0D47A1',
                         justifyContent: 'space-around',
 
                     }}

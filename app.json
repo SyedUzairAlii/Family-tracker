@@ -4,13 +4,20 @@
     "slug": "HackatonFinal",
     "privacy": "public",
     "sdkVersion": "32.0.0",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.uzair.FamilyTracker"
+    },
+    "android": {
+      "package": "com.uzair.FamilyTracker"
+    },
     "platforms": [
       "ios",
       "android"
     ],
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logoo.png",
+    "icon": "./assets/log.png",
     "splash": {
       "image": "./assets/splashes.png",
       "resizeMode": "contain",
@@ -22,8 +29,6 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "ios": {
-      "supportsTablet": true
-    }
+    "description": ""
   }
 }

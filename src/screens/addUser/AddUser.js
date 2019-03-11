@@ -96,7 +96,7 @@ class Request extends React.Component {
             <View>
                 <Header
                     containerStyle={{
-                        backgroundColor: '#075e54',
+                        backgroundColor: '#0D47A1',
                         justifyContent: 'space-around',
                     }}
                     placement="center"
@@ -123,6 +123,7 @@ class Request extends React.Component {
                                 <Input
                                     placeholder='     Enter Email'
                                     onChangeText={(e) => this.setState({ email: e })}
+                                    value={email}
                                 />
                             </View>
 
